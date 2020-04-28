@@ -12,6 +12,7 @@ JustFastUi::JustFastUi()
     int aviableSpace = std::filesystem::space(currentPath).available / 1e9;
     int capacity = std::filesystem::space(currentPath).capacity / 1e9;
     spaceInfo = std::to_wstring(aviableSpace) + L"GB/" + std::to_wstring(capacity) + L"GB free";
+    statusMessange = L"";
 
     Add(&currentFolder);
 
@@ -23,11 +24,16 @@ void JustFastUi::generateMainView()
 {
     currentFolder.entries.clear();
     currentFolder.selected = 0;
-
-    for (auto& p : std::filesystem::directory_iterator(currentPath)) {
-        if (isShowingHiddenFile || p.path().filename().string()[0] != '.') {
-            currentFolder.entries.emplace_back(p.path().filename().wstring());
+    try {
+        for (auto& p : std::filesystem::directory_iterator(currentPath)) {
+            if (isShowingHiddenFile || p.path().filename().string()[0] != '.') {
+                currentFolder.entries.emplace_back(p.path().filename().wstring());
+            }
         }
+    } catch (std::filesystem::filesystem_error error) {
+        std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+        statusMessange = converter.from_bytes(error.what());
+        changePathAndGenerateViews(currentPath.parent_path());
     }
 }
 
@@ -69,7 +75,7 @@ ftxui::Element JustFastUi::Render()
     return window(text(L"Just Fast") | bold | center,
         vbox(text(currentPath.wstring()),
             hbox(parentFolder.Render() | border, currentFolder.Render() | frame | border | flex) | flex,
-            text(spaceInfo)));
+            text(spaceInfo + L" " + statusMessange)));
 }
 
 bool JustFastUi::OnEvent(ftxui::Event event)
@@ -87,6 +93,10 @@ bool JustFastUi::OnEvent(ftxui::Event event)
     }
 
     if (event == ftxui::Event::Character('l') || event == ftxui::Event::ArrowRight) {
+        if (currentPath.empty()) {
+            return true;
+        }
+
         changePathAndGenerateViews(currentPath / currentFolder.entries[currentFolder.selected]);
         return true;
     }
