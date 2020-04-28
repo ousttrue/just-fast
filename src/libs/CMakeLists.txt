@@ -7,3 +7,5 @@ CPMAddPackage(
 	"FTXUI_ENABLE_INSTALL off"
 	"FTXUI_BUILD_TESTS off"
 )
+
+add_subdirectory(JustFastUi)
