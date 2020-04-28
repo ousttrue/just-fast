@@ -93,7 +93,7 @@ bool JustFastUi::OnEvent(ftxui::Event event)
     }
 
     if (event == ftxui::Event::Character('l') || event == ftxui::Event::ArrowRight) {
-        if (currentPath.empty()) {
+        if (currentFolder.entries.size() == 0) {
             return true;
         }
 
