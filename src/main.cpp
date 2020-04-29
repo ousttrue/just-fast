@@ -1,7 +1,7 @@
 #include "JustFastUi/JustFastUi.h"
 #include <ftxui/component/screen_interactive.hpp>
 
-int main(int argc, const char* argv[])
+int main()
 {
     auto screen = ftxui::ScreenInteractive::Fullscreen();
 

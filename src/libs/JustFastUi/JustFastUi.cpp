@@ -30,7 +30,7 @@ void JustFastUi::generateMainView()
                 currentFolder.entries.emplace_back(p.path().filename().wstring());
             }
         }
-    } catch (std::filesystem::filesystem_error error) {
+    } catch (std::filesystem::filesystem_error& error) {
         std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
         statusMessange = converter.from_bytes(error.what());
         changePathAndGenerateViews(currentPath.parent_path());
@@ -75,7 +75,8 @@ ftxui::Element JustFastUi::Render()
     return window(text(L"Just Fast") | bold | center,
         vbox(text(currentPath.wstring()),
             hbox(parentFolder.Render() | border, currentFolder.Render() | frame | border | flex) | flex,
-            text(spaceInfo + L" " + statusMessange)));
+            hbox(text(spaceInfo),
+                text(statusMessange) | center | flex)));
 }
 
 bool JustFastUi::OnEvent(ftxui::Event event)
