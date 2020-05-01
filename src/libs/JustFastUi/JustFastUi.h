@@ -12,6 +12,7 @@ private:
     std::wstring spaceInfo, statusMessange, statusSelected, operationView;
     std::filesystem::path currentPath;
     ftxui::Menu parentFolder, currentFolder;
+    float disk_space_available;
     bool isShowingHiddenFile { false };
 
     void updateParentView();

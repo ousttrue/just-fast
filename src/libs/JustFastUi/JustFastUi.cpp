@@ -11,7 +11,9 @@ JustFastUi::JustFastUi()
 
     int aviableSpace = std::filesystem::space(currentPath).available / 1e9;
     int capacity = std::filesystem::space(currentPath).capacity / 1e9;
-    spaceInfo = L"Free Space:" + std::to_wstring(aviableSpace) + L"GiB" + L"(Total:" + std::to_wstring(capacity) + L"GiB)";
+    disk_space_available = float(aviableSpace) / float(capacity);
+    spaceInfo =
+      L"Free Space:" + std::to_wstring(aviableSpace) + L" GiB" + L" (Total:" + std::to_wstring(capacity) + L"GiB)";
 
     statusMessange = L"";
     statusSelected = L"0";
@@ -124,19 +126,43 @@ void JustFastUi::performOperation(std::filesystem::path dest)
     }
 }
 
+// clang-format off
 ftxui::Element JustFastUi::Render()
 {
     using namespace ftxui;
 
-    return window(text(L"Just Fast") | bold | center,
-        vbox(text(currentPath.wstring()),
-            hbox(parentFolder.Render() | border, currentFolder.Render() | frame | border | flex) | flex,
-            hbox(text(spaceInfo),
-                text(statusMessange) | center | flex,
-                hbox(text(statusSelected) | align_right,
-                    text(operationView) | align_right)
-                    | align_right | notflex)));
+    auto current_path = text(currentPath.wstring());
+
+    auto main_view =
+        hbox(
+            parentFolder.Render(),
+            separator(),
+            currentFolder.Render()
+        );
+
+    auto status_line =
+        hbox(
+            text(L"["),
+            gauge(0.5) | flex | size(WIDTH, EQUAL, 10),
+            text(L"] "),
+            text(spaceInfo),
+            text(statusMessange) | center | flex,
+            text(statusSelected + L" " + operationView)
+        );
+
+    return
+        window(
+            text(L"Just Fast") | bold | center,
+            vbox(
+                std::move(current_path),
+                separator(),
+                std::move(main_view) | flex,
+                separator(),
+                std::move(status_line)
+            )
+        );
 }
+// clang-format on
 
 bool JustFastUi::OnEvent(ftxui::Event event)
 {
@@ -203,4 +229,3 @@ bool JustFastUi::OnEvent(ftxui::Event event)
 
     return false;
 }
-
