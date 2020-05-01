@@ -6,8 +6,7 @@ int main()
     auto screen = ftxui::ScreenInteractive::Fullscreen();
 
     JustFastUi ui;
-    ui.setQuitFunction([&screen]() {screen.ExitLoopClosure(); exit(0); });
-
+    ui.setQuitFunction(screen.ExitLoopClosure());
     screen.Loop(&ui);
     return 0;
 }

@@ -1,4 +1,5 @@
 #include "JustFastUi.h"
+#include <ftxui/screen/string.hpp>
 
 void JustFastUi::setQuitFunction(std::function<void()> q)
 {
@@ -11,7 +12,9 @@ JustFastUi::JustFastUi()
 
     int aviableSpace = std::filesystem::space(currentPath).available / 1e9;
     int capacity = std::filesystem::space(currentPath).capacity / 1e9;
-    spaceInfo = L"Free Space:" + std::to_wstring(aviableSpace) + L"GiB" + L"(Total:" + std::to_wstring(capacity) + L"GiB)";
+    disk_space_available = float(aviableSpace) / float(capacity);
+    spaceInfo =
+      L"Free Space:" + std::to_wstring(aviableSpace) + L" GiB" + L" (Total:" + std::to_wstring(capacity) + L"GiB)";
 
     statusMessange = L"";
     statusSelected = L"0";
@@ -28,7 +31,7 @@ void JustFastUi::updateMainView(size_t cursorPosition)
     try {
         for (auto& p : std::filesystem::directory_iterator(currentPath)) {
             if (isShowingHiddenFile || p.path().filename().string()[0] != '.') {
-                currentFolder.entries.emplace_back(p.path().filename().wstring());
+                currentFolder.entries.emplace_back(to_wstring(p.path().filename().string()));
             }
         }
     } catch (std::filesystem::filesystem_error& error) {
@@ -43,7 +46,7 @@ void JustFastUi::updateParentView()
     parentFolder.entries.clear();
     for (auto& p : std::filesystem::directory_iterator(currentPath.parent_path())) {
         if (isShowingHiddenFile || p.path().filename().string()[0] != '.') {
-            parentFolder.entries.emplace_back(p.path().filename().wstring());
+            parentFolder.entries.emplace_back(to_wstring(p.path().filename().string()));
         }
         if (p.path().filename() == currentPath.filename()) {
             parentFolder.selected = parentFolder.entries.size() - 1;
@@ -124,19 +127,43 @@ void JustFastUi::performOperation(std::filesystem::path dest)
     }
 }
 
+// clang-format off
 ftxui::Element JustFastUi::Render()
 {
     using namespace ftxui;
 
-    return window(text(L"Just Fast") | bold | center,
-        vbox(text(currentPath.wstring()),
-            hbox(parentFolder.Render() | border, currentFolder.Render() | frame | border | flex) | flex,
-            hbox(text(spaceInfo),
-                text(statusMessange) | center | flex,
-                hbox(text(statusSelected) | align_right,
-                    text(operationView) | align_right)
-                    | align_right | notflex)));
+    auto current_path = text(to_wstring(currentPath.string()));
+
+    auto main_view =
+        hbox(
+            parentFolder.Render(),
+            separator(),
+            currentFolder.Render()
+        );
+
+    auto status_line =
+        hbox(
+            text(L"["),
+            gauge(0.5) | flex | size(WIDTH, EQUAL, 10),
+            text(L"] "),
+            text(spaceInfo),
+            text(statusMessange) | center | flex,
+            text(statusSelected + L" " + operationView)
+        );
+
+    return
+        window(
+            text(L"Just Fast") | bold | center,
+            vbox(
+                std::move(current_path),
+                separator(),
+                std::move(main_view) | flex,
+                separator(),
+                std::move(status_line)
+            )
+        );
 }
+// clang-format on
 
 bool JustFastUi::OnEvent(ftxui::Event event)
 {
@@ -203,4 +230,3 @@ bool JustFastUi::OnEvent(ftxui::Event event)
 
     return false;
 }
-
