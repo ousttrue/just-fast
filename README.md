@@ -3,13 +3,13 @@
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/cbf1179a0d3a42c19788210ec18efbac)](https://www.codacy.com/manual/pecorainpannacotta/just-fast?utm_source=github.com&utm_medium=referral&utm_content=GiuseppeCesarano/just-fast&utm_campaign=Badge_Grade)  
 
 Just Fast is a CLI file manager with focus on speed in both execution times and usage. 🚀  
-_Note that this is highly work in progress, so expect missing features and a lot of bugs._  
+_Note that this is highly work in progress and sperimental, so expect missing features and a lot of bugs._  
 
 ![Just Fast Screenshot](resource/screenshot.png)
 
-The only implemented part for now is the file explorer.  
-
 ## 📖 Info
+
+Just Fast is a _modal_ file manager, to execute any action you need to select each file and enter a mode (copy, move, delete) once you selected every file and a mode, you can confirm the operation with the confirm key.
 
 Supported OS:
 
@@ -30,5 +30,11 @@ This is the complete list of default keybindings :
 -   `k` or `↑`: Select previous file
 -   `l` or `→`: Open selected file
 -   `h` or `←`: Back to parent folder
+-   `f`: Select file
+-   `c`: Enter COPY mode
+-   `m`: Enter MOVE mode
+-   `d`: Enter DELETE mode
+-   `SpaceBar`: Confirm operation (Copy/move selected files to current path; delete selected files)
+-   `Esc`: Clear mode and selected files.
 -   `a`: Toggle hidden files
 -   `q`: Quit
