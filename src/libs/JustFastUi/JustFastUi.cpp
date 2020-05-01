@@ -11,19 +11,20 @@ JustFastUi::JustFastUi()
 
     int aviableSpace = std::filesystem::space(currentPath).available / 1e9;
     int capacity = std::filesystem::space(currentPath).capacity / 1e9;
-    spaceInfo = std::to_wstring(aviableSpace) + L"GB/" + std::to_wstring(capacity) + L"GB free";
+    spaceInfo = L"Free Space:" + std::to_wstring(aviableSpace) + L"GiB" + L"(Total:" + std::to_wstring(capacity) + L"GiB)";
+
     statusMessange = L"";
+    statusSelected = L"0";
 
     Add(&currentFolder);
 
-    generateMainView();
-    generateParentView();
+    updateAllUi();
 }
 
-void JustFastUi::generateMainView()
+void JustFastUi::updateMainView(size_t cursorPosition)
 {
     currentFolder.entries.clear();
-    currentFolder.selected = 0;
+    currentFolder.selected = cursorPosition;
     try {
         for (auto& p : std::filesystem::directory_iterator(currentPath)) {
             if (isShowingHiddenFile || p.path().filename().string()[0] != '.') {
@@ -33,11 +34,11 @@ void JustFastUi::generateMainView()
     } catch (std::filesystem::filesystem_error& error) {
         std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
         statusMessange = converter.from_bytes(error.what());
-        changePathAndGenerateViews(currentPath.parent_path());
+        changePathAndUpdateViews(currentPath.parent_path());
     }
 }
 
-void JustFastUi::generateParentView()
+void JustFastUi::updateParentView()
 {
     parentFolder.entries.clear();
     for (auto& p : std::filesystem::directory_iterator(currentPath.parent_path())) {
@@ -50,22 +51,77 @@ void JustFastUi::generateParentView()
     }
 }
 
-void JustFastUi::changePathAndGenerateViews(const std::filesystem::path& newPath)
+void JustFastUi::updateOperationView()
+{
+    switch (filesystemOperations.getOperation()) {
+    case FileSystemOperations::Operation::NOT_SELECTED:
+        operationView = L"NO_MODE";
+        break;
+    case FileSystemOperations::Operation::COPY:
+        operationView = L"COPY";
+        break;
+    case FileSystemOperations::Operation::MOVE:
+        operationView = L"MOVE";
+        break;
+    case FileSystemOperations::Operation::DELETE:
+        operationView = L"DELETE";
+        break;
+    }
+}
+
+void JustFastUi::updateSelectedCounter()
+{
+    statusSelected = L"(" + std::to_wstring(filesystemOperations.countSelectedFiles()) + L") ";
+}
+
+void JustFastUi::updateAllUi(size_t cursorPosition)
+{
+    updateMainView(cursorPosition);
+    updateParentView();
+    updateOperationView();
+    updateSelectedCounter();
+}
+
+void JustFastUi::changePathAndUpdateViews(const std::filesystem::path& newPath)
 {
     if (!std::filesystem::is_directory(newPath)) {
         return;
     }
 
     currentPath = newPath;
-    generateMainView();
-    generateParentView();
+    updateMainView();
+    updateParentView();
+}
+
+void JustFastUi::selectFile(std::filesystem::path selectedFile)
+{
+    filesystemOperations.appendSelectedFiles(selectedFile);
+    updateSelectedCounter();
 }
 
 void JustFastUi::toggleHiddenFiles()
 {
     isShowingHiddenFile = !isShowingHiddenFile;
-    generateMainView();
-    generateParentView();
+    updateMainView();
+    updateParentView();
+}
+
+void JustFastUi::selectOperation(FileSystemOperations::Operation o)
+{
+    filesystemOperations.setOperation(o);
+    updateOperationView();
+}
+
+void JustFastUi::performOperation(std::filesystem::path dest)
+{
+    try {
+        filesystemOperations.performOperation(dest);
+        updateAllUi();
+    } catch (std::filesystem::filesystem_error& error) {
+        std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+        statusMessange = converter.from_bytes(error.what());
+        changePathAndUpdateViews(currentPath.parent_path());
+    }
 }
 
 ftxui::Element JustFastUi::Render()
@@ -76,7 +132,10 @@ ftxui::Element JustFastUi::Render()
         vbox(text(currentPath.wstring()),
             hbox(parentFolder.Render() | border, currentFolder.Render() | frame | border | flex) | flex,
             hbox(text(spaceInfo),
-                text(statusMessange) | center | flex)));
+                text(statusMessange) | center | flex,
+                hbox(text(statusSelected) | align_right,
+                    text(operationView) | align_right)
+                    | align_right | notflex)));
 }
 
 bool JustFastUi::OnEvent(ftxui::Event event)
@@ -98,17 +157,47 @@ bool JustFastUi::OnEvent(ftxui::Event event)
             return true;
         }
 
-        changePathAndGenerateViews(currentPath / currentFolder.entries[currentFolder.selected]);
+        changePathAndUpdateViews(currentPath / currentFolder.entries[currentFolder.selected]);
         return true;
     }
 
     if (event == ftxui::Event::Character('h') || event == ftxui::Event::ArrowLeft) {
-        changePathAndGenerateViews(currentPath.parent_path());
+        changePathAndUpdateViews(currentPath.parent_path());
         return true;
     }
 
     if (event == ftxui::Event::Character('a')) {
         toggleHiddenFiles();
+        return true;
+    }
+
+    if (event == ftxui::Event::Character('f')) {
+        selectFile(currentPath / currentFolder.entries[currentFolder.selected]);
+        return true;
+    }
+
+    if (event == ftxui::Event::Escape) {
+        filesystemOperations.clearSelectedFiles();
+        return true;
+    }
+
+    if (event == ftxui::Event::Character('c')) {
+        selectOperation(FileSystemOperations::Operation::COPY);
+        return true;
+    }
+
+    if (event == ftxui::Event::Character('m')) {
+        selectOperation(FileSystemOperations::Operation::MOVE);
+        return true;
+    }
+
+    if (event == ftxui::Event::Character('d')) {
+        selectOperation(FileSystemOperations::Operation::DELETE);
+        return true;
+    }
+
+    if (event == ftxui::Event::Character(' ')) {
+        performOperation(currentPath);
         return true;
     }
 

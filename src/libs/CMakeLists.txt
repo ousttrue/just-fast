@@ -8,4 +8,5 @@ CPMAddPackage(
 	"FTXUI_BUILD_TESTS off"
 )
 
+add_subdirectory(FileSystemOperations)
 add_subdirectory(JustFastUi)

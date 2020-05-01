@@ -14,4 +14,5 @@ target_link_libraries(JustFastUi
     PRIVATE ftxui::screen
     PRIVATE ftxui::dom
     PRIVATE ftxui::component
+    PRIVATE FileSystemOperations
 )
