@@ -1,4 +1,5 @@
 #include "JustFastUi.h"
+#include <ftxui/screen/string.hpp>
 
 void JustFastUi::setQuitFunction(std::function<void()> q)
 {
@@ -30,7 +31,7 @@ void JustFastUi::updateMainView(size_t cursorPosition)
     try {
         for (auto& p : std::filesystem::directory_iterator(currentPath)) {
             if (isShowingHiddenFile || p.path().filename().string()[0] != '.') {
-                currentFolder.entries.emplace_back(p.path().filename().wstring());
+                currentFolder.entries.emplace_back(to_wstring(p.path().filename().string()));
             }
         }
     } catch (std::filesystem::filesystem_error& error) {
@@ -45,7 +46,7 @@ void JustFastUi::updateParentView()
     parentFolder.entries.clear();
     for (auto& p : std::filesystem::directory_iterator(currentPath.parent_path())) {
         if (isShowingHiddenFile || p.path().filename().string()[0] != '.') {
-            parentFolder.entries.emplace_back(p.path().filename().wstring());
+            parentFolder.entries.emplace_back(to_wstring(p.path().filename().string()));
         }
         if (p.path().filename() == currentPath.filename()) {
             parentFolder.selected = parentFolder.entries.size() - 1;
@@ -131,7 +132,7 @@ ftxui::Element JustFastUi::Render()
 {
     using namespace ftxui;
 
-    auto current_path = text(currentPath.wstring());
+    auto current_path = text(to_wstring(currentPath.string()));
 
     auto main_view =
         hbox(
