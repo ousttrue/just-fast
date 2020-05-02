@@ -9,10 +9,10 @@ class JustFastUi : public ftxui::Component {
 
 private:
     std::function<void()> quit;
-    std::wstring spaceInfo, statusMessange, statusSelected, operationView;
+    std::wstring spaceInfo, statusMessage, statusSelected, operationView;
     std::filesystem::path currentPath;
     ftxui::Menu parentFolder, currentFolder;
-    float disk_space_available;
+    float diskSpaceAvailable;
     bool isShowingHiddenFile { false };
 
     void updateParentView();

@@ -10,13 +10,13 @@ JustFastUi::JustFastUi()
 {
     currentPath = std::filesystem::current_path();
 
-    int aviableSpace = std::filesystem::space(currentPath).available / 1e9;
+    int availableSpace = std::filesystem::space(currentPath).available / 1e9;
     int capacity = std::filesystem::space(currentPath).capacity / 1e9;
-    disk_space_available = float(aviableSpace) / float(capacity);
-    spaceInfo =
-      L"Free Space:" + std::to_wstring(aviableSpace) + L" GiB" + L" (Total:" + std::to_wstring(capacity) + L"GiB)";
+    diskSpaceAvailable = float(availableSpace) / float(capacity);
+    spaceInfo = L"Free Space:" + std::to_wstring(availableSpace) + L" GiB " +
+                L"(Total:" + std::to_wstring(capacity) + L"GiB)";
 
-    statusMessange = L"";
+    statusMessage = L"";
     statusSelected = L"0";
 
     Add(&currentFolder);
@@ -36,7 +36,7 @@ void JustFastUi::updateMainView(size_t cursorPosition)
         }
     } catch (std::filesystem::filesystem_error& error) {
         std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-        statusMessange = converter.from_bytes(error.what());
+        statusMessage = converter.from_bytes(error.what());
         changePathAndUpdateViews(currentPath.parent_path());
     }
 }
@@ -122,7 +122,7 @@ void JustFastUi::performOperation(std::filesystem::path dest)
         updateAllUi();
     } catch (std::filesystem::filesystem_error& error) {
         std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-        statusMessange = converter.from_bytes(error.what());
+        statusMessage = converter.from_bytes(error.what());
         changePathAndUpdateViews(currentPath.parent_path());
     }
 }
@@ -133,12 +133,12 @@ ftxui::Element JustFastUi::Render()
     using namespace ftxui;
 
     auto current_path = text(to_wstring(currentPath.string()));
-
+      
     auto main_view =
         hbox(
-            parentFolder.Render(),
+            parentFolder.Render() | frame,
             separator(),
-            currentFolder.Render()
+            currentFolder.Render() | flex | frame
         );
 
     auto status_line =
@@ -147,7 +147,7 @@ ftxui::Element JustFastUi::Render()
             gauge(0.5) | flex | size(WIDTH, EQUAL, 10),
             text(L"] "),
             text(spaceInfo),
-            text(statusMessange) | center | flex,
+            text(statusMessage) | center | flex,
             text(statusSelected + L" " + operationView)
         );
 
