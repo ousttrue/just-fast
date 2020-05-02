@@ -133,12 +133,12 @@ ftxui::Element JustFastUi::Render()
     using namespace ftxui;
 
     auto current_path = text(to_wstring(currentPath.string()));
-
+      
     auto main_view =
         hbox(
-            parentFolder.Render(),
+            parentFolder.Render() | frame,
             separator(),
-            currentFolder.Render()
+            currentFolder.Render() | flex | frame
         );
 
     auto status_line =
