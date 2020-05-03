@@ -22,10 +22,10 @@ private:
     void updateAllUi(size_t = 0);
 
     void changePathAndUpdateViews(const std::filesystem::path&);
-    void selectFile(std::filesystem::path);
+    void selectFile(const std::filesystem::path&);
     void toggleHiddenFiles();
     void selectOperation(FileSystemOperations::Operation);
-    void performOperation(std::filesystem::path);
+    void performOperation(const std::filesystem::path&);
 
     FileSystemOperations filesystemOperations;
 

@@ -16,8 +16,8 @@ public:
         MOVE,
     };
 
-    void setSelectedFiles(std::vector<std::filesystem::path>);
-    void appendSelectedFiles(std::filesystem::path);
+    void setSelectedFiles(const std::vector<std::filesystem::path>&);
+    void appendSelectedFiles(const std::filesystem::path&);
     void clearSelectedFiles();
     std::vector<std::filesystem::path> getSelectedFiles();
     size_t countSelectedFiles();
@@ -26,7 +26,7 @@ public:
     Operation getOperation();
     void clearOperation();
 
-    void performOperation(std::filesystem::path);
+    void performOperation(const std::filesystem::path&);
 
 private:
     std::vector<std::filesystem::path> selectedFiles;

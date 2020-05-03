@@ -13,8 +13,7 @@ JustFastUi::JustFastUi()
     int availableSpace = std::filesystem::space(currentPath).available / 1e9;
     int capacity = std::filesystem::space(currentPath).capacity / 1e9;
     diskSpaceAvailable = float(availableSpace) / float(capacity);
-    spaceInfo = L"Free Space:" + std::to_wstring(availableSpace) + L" GiB " +
-                L"(Total:" + std::to_wstring(capacity) + L"GiB)";
+    spaceInfo = L"Free Space:" + std::to_wstring(availableSpace) + L" GiB " + L"(Total:" + std::to_wstring(capacity) + L"GiB)";
 
     statusMessage = L"";
     statusSelected = L"0";
@@ -96,7 +95,7 @@ void JustFastUi::changePathAndUpdateViews(const std::filesystem::path& newPath)
     updateParentView();
 }
 
-void JustFastUi::selectFile(std::filesystem::path selectedFile)
+void JustFastUi::selectFile(const std::filesystem::path& selectedFile)
 {
     filesystemOperations.appendSelectedFiles(selectedFile);
     updateSelectedCounter();
@@ -115,7 +114,7 @@ void JustFastUi::selectOperation(FileSystemOperations::Operation o)
     updateOperationView();
 }
 
-void JustFastUi::performOperation(std::filesystem::path dest)
+void JustFastUi::performOperation(const std::filesystem::path& dest)
 {
     try {
         filesystemOperations.performOperation(dest);

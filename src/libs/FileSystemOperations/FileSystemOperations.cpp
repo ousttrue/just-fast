@@ -1,12 +1,12 @@
 #include "FileSystemOperations.h"
 #include <algorithm>
 
-void FileSystemOperations::setSelectedFiles(std::vector<std::filesystem::path> sFiles)
+void FileSystemOperations::setSelectedFiles(const std::vector<std::filesystem::path>& sFiles)
 {
     selectedFiles = sFiles;
 }
 
-void FileSystemOperations::appendSelectedFiles(std::filesystem::path fileToAppand)
+void FileSystemOperations::appendSelectedFiles(const std::filesystem::path& fileToAppand)
 {
     //I hate that.
     auto it = std::find(selectedFiles.begin(), selectedFiles.end(), fileToAppand);
@@ -47,7 +47,7 @@ void FileSystemOperations::clearOperation()
     selectedOperation = NOT_SELECTED;
 }
 
-void FileSystemOperations::performOperation(std::filesystem::path dest)
+void FileSystemOperations::performOperation(const std::filesystem::path& dest)
 {
     try {
         switch (selectedOperation) {
