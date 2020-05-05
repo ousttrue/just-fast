@@ -1,4 +1,5 @@
 #include <filesystem>
+#include <future>
 #include <vector>
 
 /*! \class FileSystemOperations
@@ -28,7 +29,12 @@ public:
 
     void performOperation(const std::filesystem::path&);
 
+    void clearLastOperationStatus();
+    bool lastOperationIsCompleated();
+
 private:
     std::vector<std::filesystem::path> selectedFiles;
     Operation selectedOperation = NOT_SELECTED;
+
+    std::future<bool> lastOperationCompleated;
 };

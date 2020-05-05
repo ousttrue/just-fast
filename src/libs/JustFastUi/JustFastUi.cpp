@@ -131,6 +131,11 @@ ftxui::Element JustFastUi::Render()
 {
     using namespace ftxui;
 
+    if(filesystemOperations.lastOperationIsCompleated()){
+	updateAllUi(currentFolder.selected);
+	filesystemOperations.clearLastOperationStatus();
+    }
+
     auto current_path = text(to_wstring(currentPath.string()));
       
     auto main_view =
