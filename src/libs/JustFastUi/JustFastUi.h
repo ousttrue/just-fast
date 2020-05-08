@@ -5,6 +5,11 @@
 #include <ftxui/component/component.hpp>
 #include <ftxui/component/menu.hpp>
 
+struct JustFastOptions{
+    bool showHiddenFiles;
+    std::filesystem::path path;
+};
+
 class JustFastUi : public ftxui::Component {
 
 private:
@@ -13,7 +18,7 @@ private:
     std::filesystem::path currentPath;
     ftxui::Menu parentFolder, currentFolder;
     float diskSpaceAvailable;
-    bool isShowingHiddenFile { false };
+    bool isShowingHiddenFile; 
 
     void updateParentView();
     void updateMainView(size_t = 0);
@@ -30,7 +35,7 @@ private:
     FileSystemOperations filesystemOperations;
 
 public:
-    JustFastUi();
+    JustFastUi(const JustFastOptions&);
 
     void setQuitFunction(std::function<void()>);
 
