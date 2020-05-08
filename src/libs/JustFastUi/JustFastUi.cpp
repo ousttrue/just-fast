@@ -137,16 +137,16 @@ ftxui::Element JustFastUi::Render()
 	filesystemOperations.clearLastOperationStatus();
     }
 
-    auto current_path = text(currentPathCached);
+    auto currentPathView = text(currentPathCached);
       
-    auto main_view =
+    auto mainView =
         hbox(
             parentFolder.Render() | frame,
             separator(),
             currentFolder.Render() | flex | frame
         );
 
-    auto status_line =
+    auto statusLine =
         hbox(
             text(L"["),
             gauge(0.5) | flex | size(WIDTH, EQUAL, 10),
@@ -160,11 +160,11 @@ ftxui::Element JustFastUi::Render()
         window(
             text(L"Just Fast") | bold | center,
             vbox(
-                std::move(current_path),
+                std::move(currentPathView),
                 separator(),
-                std::move(main_view) | flex,
+                std::move(mainView) | flex,
                 separator(),
-                std::move(status_line)
+                std::move(statusLine)
             )
         );
 }
