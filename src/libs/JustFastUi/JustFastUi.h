@@ -9,7 +9,7 @@ class JustFastUi : public ftxui::Component {
 
 private:
     std::function<void()> quit;
-    std::wstring spaceInfo, statusMessage, statusSelected, operationView;
+    std::wstring spaceInfo, statusMessage, statusSelected, operationView, currentPathCached;
     std::filesystem::path currentPath;
     ftxui::Menu parentFolder, currentFolder;
     float diskSpaceAvailable;

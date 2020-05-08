@@ -17,7 +17,7 @@ JustFastUi::JustFastUi()
 
     statusMessage = L"";
     statusSelected = L"0";
-
+    currentPathCached = to_wstring(currentPath.string());
     Add(&currentFolder);
 
     updateAllUi();
@@ -91,6 +91,7 @@ void JustFastUi::changePathAndUpdateViews(const std::filesystem::path& newPath)
     }
 
     currentPath = newPath;
+    currentPathCached = to_wstring(currentPath.string());
     updateMainView();
     updateParentView();
 }
@@ -136,7 +137,7 @@ ftxui::Element JustFastUi::Render()
 	filesystemOperations.clearLastOperationStatus();
     }
 
-    auto current_path = text(to_wstring(currentPath.string()));
+    auto current_path = text(currentPathCached);
       
     auto main_view =
         hbox(
@@ -171,15 +172,11 @@ ftxui::Element JustFastUi::Render()
 
 bool JustFastUi::OnEvent(ftxui::Event event)
 {
-    if (event == ftxui::Event::Character('q')) {
-        quit();
-    }
-
-    if (event == ftxui::Event::Character('k') || event == ftxui::Event::ArrowUp) {
+    if (event == ftxui::Event::Character('j') || event == ftxui::Event::ArrowDown) {
         return currentFolder.OnEvent(event);
     }
 
-    if (event == ftxui::Event::Character('j') || event == ftxui::Event::ArrowDown) {
+    if (event == ftxui::Event::Character('k') || event == ftxui::Event::ArrowUp) {
         return currentFolder.OnEvent(event);
     }
 
@@ -197,18 +194,13 @@ bool JustFastUi::OnEvent(ftxui::Event event)
         return true;
     }
 
-    if (event == ftxui::Event::Character('a')) {
-        toggleHiddenFiles();
-        return true;
-    }
-
     if (event == ftxui::Event::Character('f')) {
         selectFile(currentPath / currentFolder.entries[currentFolder.selected]);
         return true;
     }
 
-    if (event == ftxui::Event::Escape) {
-        filesystemOperations.clearSelectedFiles();
+    if (event == ftxui::Event::Character(' ')) {
+        performOperation(currentPath);
         return true;
     }
 
@@ -227,9 +219,18 @@ bool JustFastUi::OnEvent(ftxui::Event event)
         return true;
     }
 
-    if (event == ftxui::Event::Character(' ')) {
-        performOperation(currentPath);
+    if (event == ftxui::Event::Character('a')) {
+        toggleHiddenFiles();
         return true;
+    }
+
+    if (event == ftxui::Event::Escape) {
+        filesystemOperations.clearSelectedFiles();
+        return true;
+    }
+
+    if (event == ftxui::Event::Character('q')) {
+        quit();
     }
 
     return false;
