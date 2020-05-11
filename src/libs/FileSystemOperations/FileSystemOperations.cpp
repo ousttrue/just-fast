@@ -95,7 +95,7 @@ void FileSystemOperations::performOperation(const std::filesystem::path& dest)
                     break;
                 }
             } catch (std::filesystem::filesystem_error& e) {
-                throw e;
+                throw;
             }
             return true;
         },
