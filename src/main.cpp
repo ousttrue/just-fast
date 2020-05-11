@@ -51,7 +51,8 @@ int main(int argc, char* argv[])
 
     //Creating options
     JustFastOptions options;
-    if (cliResult["path"].as<std::string>() == "") {
+    //TODO: Change that check when file opening is supported.
+    if (cliResult["path"].as<std::string>() == "" || std::filesystem::is_directory(cliResult["path"].as<std::string>())) {
         options.path = std::filesystem::current_path();
     } else {
         try {
