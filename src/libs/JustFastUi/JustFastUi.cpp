@@ -140,32 +140,32 @@ ftxui::Element JustFastUi::Render()
     auto currentPathView = text(currentPathCached);
       
     auto mainView =
-        hbox(
+        hbox({
             parentFolder.Render() | frame,
             separator(),
             currentFolder.Render() | flex | frame
-        );
+	});
 
     auto statusLine =
-        hbox(
+        hbox({
             text(L"["),
             gauge(0.5) | flex | size(WIDTH, EQUAL, 10),
             text(L"] "),
             text(spaceInfo),
             text(statusMessage) | center | flex,
             text(statusSelected + L" " + operationView)
-        );
+	});
 
     return
         window(
             text(L"Just Fast") | bold | center,
-            vbox(
-                std::move(currentPathView),
+            vbox({
+                currentPathView,
                 separator(),
-                std::move(mainView) | flex,
+                mainView | flex,
                 separator(),
-                std::move(statusLine)
-            )
+                statusLine
+	    })
         );
 }
 // clang-format on
