@@ -1,9 +1,9 @@
 # ⚡ Just Fast
 
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/cbf1179a0d3a42c19788210ec18efbac)](https://www.codacy.com/manual/pecorainpannacotta/just-fast?utm_source=github.com&utm_medium=referral&utm_content=GiuseppeCesarano/just-fast&utm_campaign=Badge_Grade)  
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/cbf1179a0d3a42c19788210ec18efbac)](https://www.codacy.com/manual/pecorainpannacotta/just-fast?utm_source=github.com&utm_medium=referral&utm_content=GiuseppeCesarano/just-fast&utm_campaign=Badge_Grade)
 
 Just Fast is a CLI file manager with focus on speed in both execution times and usage. 🚀  
-_Note that this is highly work in progress and sperimental, so expect missing features and a lot of bugs._  
+_Note that this is highly work in progress and sperimental, so expect missing features and a lot of bugs._
 
 ![Just Fast Screenshot](resource/screenshot.png)
 

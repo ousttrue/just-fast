@@ -1,5 +1,6 @@
 #include "JustFastUi/JustFastUi.h"
 #include <cxxopts.hpp>
+#include <filesystem>
 #include <ftxui/component/screen_interactive.hpp>
 #include <iostream>
 #include <string>
@@ -22,6 +23,16 @@ void startJustFast(const JustFastOptions& options)
     JustFastUi ui(options);
     ui.setQuitFunction(screen.ExitLoopClosure());
     screen.Loop(&ui);
+}
+
+std::filesystem::path normalizePath(std::filesystem::path p)
+{
+    p.lexically_normal();
+    if (p.is_absolute()) {
+        return p;
+    } else {
+        return (std::filesystem::current_path() / p);
+    }
 }
 
 int main(int argc, char* argv[])
@@ -52,11 +63,11 @@ int main(int argc, char* argv[])
     //Creating options
     JustFastOptions options;
     //TODO: Change that check when file opening is supported.
-    if (cliResult["path"].as<std::string>() == "" || std::filesystem::is_directory(cliResult["path"].as<std::string>())) {
+    if (cliResult["path"].as<std::string>() == "") {
         options.path = std::filesystem::current_path();
     } else {
         try {
-            options.path = cliResult["path"].as<std::string>();
+            options.path = normalizePath(cliResult["path"].as<std::string>());
         } catch (std::filesystem::filesystem_error& error) {
             std::cerr << "Can't open parsed path" << std::endl;
             exit(1);
