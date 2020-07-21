@@ -26,11 +26,11 @@ If you have **git** and **cmake** installed you can use the following one line c
 
 This is the complete list of default keybindings :
 
--   `j` or `↓`: Select next file
--   `k` or `↑`: Select previous file
--   `l` or `→`: Open selected file
+-   `j` or `↓`: Highlight next file
+-   `k` or `↑`: Highlight previous file
+-   `l` or `→`: Open highlighted file
 -   `h` or `←`: Back to parent folder
--   `f`: Select file
+-   `f`: Add highlighted file to seleted list
 -   `c`: Enter COPY mode
 -   `m`: Enter MOVE mode
 -   `d`: Enter DELETE mode
