@@ -68,7 +68,7 @@ void FileSystemOperations::performOperation(const std::filesystem::path& dest)
     };
 
     lastOperationCompleated = std::async(
-        std::launch::async, [](std::vector<std::filesystem::path> selectedFiles, const std::filesystem::path& dest, Operation selectedOperation) -> bool {
+        std::launch::async, [](const std::vector<std::filesystem::path>& selectedFiles, const std::filesystem::path& dest, Operation selectedOperation) -> bool {
             try {
                 switch (selectedOperation) {
 

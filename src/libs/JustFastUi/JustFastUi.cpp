@@ -1,9 +1,11 @@
 #include "JustFastUi.h"
 #include <ftxui/screen/string.hpp>
+#include <utility>
+#include <string>
 
 void JustFastUi::setQuitFunction(std::function<void()> q)
 {
-    quit = q;
+    quit = std::move(q);
 }
 
 JustFastUi::JustFastUi(const JustFastOptions& options)
@@ -17,7 +19,7 @@ JustFastUi::JustFastUi(const JustFastOptions& options)
 
     statusMessage = L"";
     statusSelected = L"0";
-    currentPathCached = to_wstring(currentPath.string());
+    currentPathCached = currentPath.wstring();
     Add(&currentFolder);
 
     updateAllUi();
@@ -30,7 +32,7 @@ void JustFastUi::updateMainView(size_t cursorPosition)
     try {
         for (auto& p : std::filesystem::directory_iterator(currentPath)) {
             if (isShowingHiddenFile || p.path().filename().string()[0] != '.') {
-                currentFolder.entries.emplace_back(to_wstring(p.path().filename().string()));
+                currentFolder.entries.emplace_back(p.path().filename().wstring());
             }
         }
     } catch (std::filesystem::filesystem_error& error) {
@@ -45,7 +47,7 @@ void JustFastUi::updateParentView()
     parentFolder.entries.clear();
     for (auto& p : std::filesystem::directory_iterator(currentPath.parent_path())) {
         if (isShowingHiddenFile || p.path().filename().string()[0] != '.') {
-            parentFolder.entries.emplace_back(to_wstring(p.path().filename().string()));
+            parentFolder.entries.emplace_back(p.path().filename().wstring());
         }
         if (p.path().filename() == currentPath.filename()) {
             parentFolder.selected = parentFolder.entries.size() - 1;
@@ -91,7 +93,7 @@ void JustFastUi::changePathAndUpdateViews(const std::filesystem::path& newPath)
     }
 
     currentPath = newPath;
-    currentPathCached = to_wstring(currentPath.string());
+    currentPathCached = currentPath.wstring();
     updateMainView();
     updateParentView();
 }
