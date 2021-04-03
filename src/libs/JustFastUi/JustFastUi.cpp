@@ -1,5 +1,6 @@
 #include "JustFastUi.h"
 #include <ftxui/screen/string.hpp>
+#include <codecvt>
 #include <utility>
 #include <string>
 
