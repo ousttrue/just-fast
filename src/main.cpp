@@ -20,9 +20,9 @@ void startJustFast(const JustFastOptions& options)
 {
     auto screen = ftxui::ScreenInteractive::Fullscreen();
 
-    JustFastUi ui(options);
-    ui.setQuitFunction(screen.ExitLoopClosure());
-    screen.Loop(&ui);
+    auto ui = ftxui::Make<JustFastUi>(options);
+    ui->setQuitFunction(screen.ExitLoopClosure());
+    screen.Loop(ui);
 }
 
 std::filesystem::path normalizePath(std::filesystem::path p)

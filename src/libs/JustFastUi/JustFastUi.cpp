@@ -1,8 +1,9 @@
 #include "JustFastUi.h"
-#include <ftxui/screen/string.hpp>
 #include <codecvt>
-#include <utility>
+#include <ftxui/component/event.hpp>
+#include <ftxui/screen/string.hpp>
 #include <string>
+#include <utility>
 
 void JustFastUi::setQuitFunction(std::function<void()> q)
 {
@@ -21,19 +22,19 @@ JustFastUi::JustFastUi(const JustFastOptions& options)
     statusMessage = L"";
     statusSelected = L"0";
     currentPathCached = currentPath.wstring();
-    Add(&currentFolder);
+    Add(currentFolder);
 
     updateAllUi();
 }
 
 void JustFastUi::updateMainView(size_t cursorPosition)
 {
-    currentFolder.entries.clear();
-    currentFolder.selected = cursorPosition;
+    currentFolderEntries.clear();
+    currentFolderSelected = cursorPosition;
     try {
         for (auto& p : std::filesystem::directory_iterator(currentPath)) {
             if (isShowingHiddenFile || p.path().filename().string()[0] != '.') {
-                currentFolder.entries.emplace_back(p.path().filename().wstring());
+                currentFolderEntries.emplace_back(p.path().filename().wstring());
             }
         }
     } catch (std::filesystem::filesystem_error& error) {
@@ -45,13 +46,13 @@ void JustFastUi::updateMainView(size_t cursorPosition)
 
 void JustFastUi::updateParentView()
 {
-    parentFolder.entries.clear();
+    parentFolderEntries.clear();
     for (auto& p : std::filesystem::directory_iterator(currentPath.parent_path())) {
         if (isShowingHiddenFile || p.path().filename().string()[0] != '.') {
-            parentFolder.entries.emplace_back(p.path().filename().wstring());
+            parentFolderEntries.emplace_back(p.path().filename().wstring());
         }
         if (p.path().filename() == currentPath.filename()) {
-            parentFolder.selected = parentFolder.entries.size() - 1;
+            parentFolderSelected = parentFolderEntries.size() - 1;
         }
     }
 }
@@ -136,7 +137,7 @@ ftxui::Element JustFastUi::Render()
     using namespace ftxui;
 
     if(filesystemOperations.lastOperationIsCompleated()){
-	updateAllUi(currentFolder.selected);
+	updateAllUi(currentFolderSelected);
 	filesystemOperations.clearLastOperationStatus();
     }
 
@@ -144,9 +145,9 @@ ftxui::Element JustFastUi::Render()
       
     auto mainView =
         hbox({
-            parentFolder.Render() | frame,
+            parentFolder->Render() | frame,
             separator(),
-            currentFolder.Render() | flex | frame
+            currentFolder->Render() | flex | frame
 	});
 
     auto statusLine =
@@ -175,20 +176,12 @@ ftxui::Element JustFastUi::Render()
 
 bool JustFastUi::OnEvent(ftxui::Event event)
 {
-    if (event == ftxui::Event::Character('j') || event == ftxui::Event::ArrowDown) {
-        return currentFolder.OnEvent(event);
-    }
-
-    if (event == ftxui::Event::Character('k') || event == ftxui::Event::ArrowUp) {
-        return currentFolder.OnEvent(event);
-    }
-
     if (event == ftxui::Event::Character('l') || event == ftxui::Event::ArrowRight) {
-        if (currentFolder.entries.size() == 0) {
+        if (currentFolderEntries.size() == 0) {
             return true;
         }
 
-        changePathAndUpdateViews(currentPath / currentFolder.entries[currentFolder.selected]);
+        changePathAndUpdateViews(currentPath / currentFolderEntries[currentFolderSelected]);
         return true;
     }
 
@@ -198,7 +191,7 @@ bool JustFastUi::OnEvent(ftxui::Event event)
     }
 
     if (event == ftxui::Event::Character('f')) {
-        selectFile(currentPath / currentFolder.entries[currentFolder.selected]);
+        selectFile(currentPath / currentFolderEntries[currentFolderSelected]);
         return true;
     }
 
@@ -236,5 +229,5 @@ bool JustFastUi::OnEvent(ftxui::Event event)
         quit();
     }
 
-    return false;
+    return ComponentBase::OnEvent(event);
 }
