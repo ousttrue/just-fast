@@ -1,7 +1,7 @@
 CPMAddPackage(
     NAME FTXUI
     GITHUB_REPOSITORY ArthurSonzogni/FTXUI
-    GIT_TAG master
+    GIT_TAG 7daeac25c003b14898f9ff9c6731ceb83ec55fd3
     OPTIONS
 	"FTXUI_BUILD_EXAMPLES off"
 	"FTXUI_ENABLE_INSTALL off"

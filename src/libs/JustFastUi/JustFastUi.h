@@ -10,13 +10,18 @@ struct JustFastOptions{
     std::filesystem::path path;
 };
 
-class JustFastUi : public ftxui::Component {
+class JustFastUi : public ftxui::ComponentBase {
 
 private:
     std::function<void()> quit;
     std::wstring spaceInfo, statusMessage, statusSelected, operationView, currentPathCached;
     std::filesystem::path currentPath;
-    ftxui::Menu parentFolder, currentFolder;
+    std::vector<std::wstring> parentFolderEntries;
+    std::vector<std::wstring> currentFolderEntries;
+    int parentFolderSelected = 0;
+    int currentFolderSelected = 0;
+    ftxui::Component parentFolder = ftxui::Menu(&parentFolderEntries, &parentFolderSelected);
+    ftxui::Component currentFolder = ftxui::Menu(&currentFolderEntries, &currentFolderSelected);
     float diskSpaceAvailable;
     bool isShowingHiddenFile; 
 
