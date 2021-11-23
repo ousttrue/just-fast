@@ -1,5 +1,5 @@
 add_library(FileSystemOperations FileSystemOperations.cpp)
-set_target_properties(FileSystemOperations PROPERTIES CXX_STANDARD 17)
+set_target_properties(FileSystemOperations PROPERTIES CXX_STANDARD 20)
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     target_compile_options(FileSystemOperations PRIVATE "-Wall")
