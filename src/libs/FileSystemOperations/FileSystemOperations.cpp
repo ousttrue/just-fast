@@ -77,19 +77,19 @@ void FileSystemOperations::performOperation(const std::filesystem::path& dest)
                     break;
 
                 case COPY:
-                    for (auto& p : selectedFiles) {
+                    for (const auto& p : selectedFiles) {
                         std::filesystem::copy(p, dest / p.filename(), std::filesystem::copy_options::recursive);
                     }
                     break;
 
                 case DELETE:
-                    for (auto& p : selectedFiles) {
+                    for (const auto& p : selectedFiles) {
                         std::filesystem::remove_all(p);
                     }
                     break;
 
                 case MOVE:
-                    for (auto& p : selectedFiles) {
+                    for (const auto& p : selectedFiles) {
                         std::filesystem::rename(p, dest / p.filename());
                     }
                     break;
