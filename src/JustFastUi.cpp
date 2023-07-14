@@ -11,16 +11,16 @@ void JustFastUi::setQuitFunction(std::function<void()> q)
 }
 
 JustFastUi::JustFastUi(const JustFastOptions& options)
-    : statusMessage(L""), statusSelected(L"0"), currentPath { options.path }
+    : statusMessage(L"")
+    , statusSelected(L"0")
+    , currentPath { options.path }
     , isShowingHiddenFile { options.showHiddenFiles }
 {
-    int availableSpace = std::filesystem::space(currentPath).available / 1e9;
-    int capacity = std::filesystem::space(currentPath).capacity / 1e9;
+    int availableSpace = static_cast<int>(std::filesystem::space(currentPath).available / 1e9);
+    int capacity = static_cast<int>(std::filesystem::space(currentPath).capacity / 1e9);
     diskSpaceAvailable = float(availableSpace) / float(capacity);
     spaceInfo = L"Free Space:" + std::to_wstring(availableSpace) + L" GiB " + L"(Total:" + std::to_wstring(capacity) + L"GiB)";
 
-    
-    
     currentPathCached = currentPath.wstring();
     Add(currentFolder);
 

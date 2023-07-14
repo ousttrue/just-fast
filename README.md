@@ -17,9 +17,11 @@ Supported OS:
 
 -   [x] MacOs 🍎
 -   [x] Gnu/Linux 🐧
--   [x] Windows
+-   [x] Windows 🪟
 
 ## Fork
+
+development:
 
 - Windows 
 - vc2022

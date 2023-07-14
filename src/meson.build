@@ -5,11 +5,10 @@ executable(
     'jf',
     [
         'main.cpp',
-        'libs/JustFastUi/JustFastUi.cpp',
-        'libs/FileSystemOperations/FileSystemOperations.cpp',
+        'JustFastUi.cpp',
+        'FileSystemOperations.cpp',
     ],
     install: true,
-    include_directories: include_directories('libs'),
     dependencies: [ftxui_dep, cxxopts_dep],
     cpp_args: [
         '-DPROJECT_NAME="jf"',

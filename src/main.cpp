@@ -1,4 +1,4 @@
-#include "JustFastUi/JustFastUi.h"
+#include "JustFastUi.h"
 #include <cxxopts.hpp>
 #include <filesystem>
 #include <ftxui/component/screen_interactive.hpp>
