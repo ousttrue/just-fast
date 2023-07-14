@@ -1,5 +1,7 @@
 # ⚡ Just Fast
 
+`c++17`
+
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/cbf1179a0d3a42c19788210ec18efbac)](https://www.codacy.com/manual/pecorainpannacotta/just-fast?utm_source=github.com&utm_medium=referral&utm_content=GiuseppeCesarano/just-fast&utm_campaign=Badge_Grade)
 
 Just Fast is a CLI file manager with focus on speed in both execution times and usage. 🚀  
@@ -15,7 +17,16 @@ Supported OS:
 
 -   [x] MacOs 🍎
 -   [x] Gnu/Linux 🐧
--   [ ] Windows
+-   [x] Windows
+
+## Fork
+
+- Windows 
+- vc2022
+
+### meson build
+
+cmake to meson.
 
 ## Try Just Fast
 
