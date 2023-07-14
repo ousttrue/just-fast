@@ -30,6 +30,11 @@ development:
 
 cmake to meson.
 
+```
+> meson setup builddir --prefix $(pwd)/prefix 
+> meson install -C builddir
+```
+
 ## Try Just Fast
 
 If you have **git** and **cmake** installed you can use the following one line command to download and compile _Just Fast_.  

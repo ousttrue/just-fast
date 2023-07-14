@@ -1,42 +1,20 @@
 #pragma once
-
-#include "FileSystemOperations.h"
 #include <filesystem>
 #include <ftxui/component/component.hpp>
 
-struct JustFastOptions{
+struct JustFastOptions {
     bool showHiddenFiles;
     std::filesystem::path path;
 };
 
 class JustFastUi : public ftxui::ComponentBase {
 
-private:
+    struct JustFastUiImpl* m_impl;
+
+    ftxui::Component parentFolder;
+    ftxui::Component currentFolder;
+
     std::function<void()> quit;
-    std::wstring spaceInfo, statusMessage, statusSelected, operationView, currentPathCached;
-    std::filesystem::path currentPath;
-    std::vector<std::wstring> parentFolderEntries;
-    std::vector<std::wstring> currentFolderEntries;
-    int parentFolderSelected = 0;
-    int currentFolderSelected = 0;
-    ftxui::Component parentFolder = ftxui::Menu(&parentFolderEntries, &parentFolderSelected);
-    ftxui::Component currentFolder = ftxui::Menu(&currentFolderEntries, &currentFolderSelected);
-    float diskSpaceAvailable;
-    bool isShowingHiddenFile; 
-
-    void updateParentView();
-    void updateMainView(size_t = 0);
-    void updateOperationView();
-    void updateSelectedCounter();
-    void updateAllUi(size_t = 0);
-
-    void changePathAndUpdateViews(const std::filesystem::path&);
-    void selectFile(const std::filesystem::path&);
-    void toggleHiddenFiles();
-    void selectOperation(FileSystemOperations::Operation);
-    void performOperation(const std::filesystem::path&);
-
-    FileSystemOperations filesystemOperations;
 
 public:
     JustFastUi(const JustFastOptions&);
