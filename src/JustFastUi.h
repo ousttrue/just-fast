@@ -2,11 +2,6 @@
 #include <filesystem>
 #include <ftxui/component/component.hpp>
 
-struct JustFastOptions {
-    bool showHiddenFiles;
-    std::filesystem::path path;
-};
-
 class JustFastUi : public ftxui::ComponentBase {
 
     struct JustFastUiImpl* m_impl;
@@ -17,7 +12,7 @@ class JustFastUi : public ftxui::ComponentBase {
     std::function<void()> quit;
 
 public:
-    JustFastUi(const JustFastOptions&);
+    JustFastUi(const std::filesystem::path& path, bool showHiddenFiles);
 
     void setQuitFunction(std::function<void()>);
 

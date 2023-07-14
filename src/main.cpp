@@ -5,7 +5,7 @@
 #include <iostream>
 #include <string>
 
-cxxopts::ParseResult parseArgs(cxxopts::Options opts, const int* argc, char*** argv)
+static cxxopts::ParseResult parseArgs(cxxopts::Options opts, const int* argc, char*** argv)
 {
     try {
         cxxopts::ParseResult res = opts.parse(*argc, *argv);
@@ -16,16 +16,7 @@ cxxopts::ParseResult parseArgs(cxxopts::Options opts, const int* argc, char*** a
     }
 }
 
-void startJustFast(const JustFastOptions& options)
-{
-    auto screen = ftxui::ScreenInteractive::Fullscreen();
-
-    auto ui = ftxui::Make<JustFastUi>(options);
-    ui->setQuitFunction(screen.ExitLoopClosure());
-    screen.Loop(ui);
-}
-
-std::filesystem::path normalizePath(std::filesystem::path p)
+static std::filesystem::path normalizePath(std::filesystem::path p)
 {
     p = p.lexically_normal();
     return p.is_absolute() ? p : std::filesystem::current_path() / p;
@@ -57,21 +48,26 @@ int main(int argc, char* argv[]) noexcept
     }
 
     // Creating options
-    JustFastOptions options;
+    std::filesystem::path path;
+    bool showHiddenFiles = true;
+
     // TODO: Change that check when file opening is supported.
     if (cliResult["path"].as<std::string>().empty()) {
-        options.path = std::filesystem::current_path();
+        path = std::filesystem::current_path();
     } else {
         try {
-            options.path = normalizePath(cliResult["path"].as<std::string>());
+            path = normalizePath(cliResult["path"].as<std::string>());
         } catch (std::filesystem::filesystem_error& error) {
             std::cerr << "Can't open parsed path" << std::endl;
             return 1;
         }
     }
-    options.showHiddenFiles = cliResult["all"].as<bool>();
+    showHiddenFiles = cliResult["all"].as<bool>();
 
-    startJustFast(options);
+    auto screen = ftxui::ScreenInteractive::Fullscreen();
+    auto ui = ftxui::Make<JustFastUi>(path, showHiddenFiles);
+    ui->setQuitFunction(screen.ExitLoopClosure());
+    screen.Loop(ui);
 
     return 0;
 }

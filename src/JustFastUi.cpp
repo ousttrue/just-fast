@@ -6,70 +6,81 @@
 #include <string>
 #include <utility>
 
+struct Folder {
+    std::vector<std::wstring> Entries;
+    int Selected = 0;
+};
+
+struct ParentView {
+    Folder Folder;
+    void Update(const std::filesystem::path& current, bool showHiddenFile)
+    {
+        Folder.Entries.clear();
+        for (const auto& p : std::filesystem::directory_iterator(current.parent_path())) {
+            if (showHiddenFile || p.path().filename().string()[0] != '.') {
+                Folder.Entries.emplace_back(p.path().filename().wstring());
+            }
+            if (p.path().filename() == current.filename()) {
+                Folder.Selected = Folder.Entries.size() - 1;
+            }
+        }
+    }
+};
+
+struct MainView {
+    Folder Folder;
+    const std::wstring& SelectedEntry() const
+    {
+        return Folder.Entries[Folder.Selected];
+    }
+
+    void Update(const std::filesystem::path& path, bool showHiddenFile, size_t cursorPosition = 0)
+    {
+        Folder.Entries.clear();
+        Folder.Selected = cursorPosition;
+        for (const auto& p : std::filesystem::directory_iterator(path)) {
+            if (showHiddenFile || p.path().filename().string()[0] != '.') {
+                Folder.Entries.emplace_back(p.path().filename().wstring());
+            }
+        }
+    }
+};
+
 struct JustFastUiImpl {
+    std::filesystem::path CurrentPath;
+    std::wstring CurrentPathCached;
+    std::list<std::function<void()>> OnChdirCallbacks;
+
     std::wstring spaceInfo;
     std::wstring statusMessage;
     std::wstring statusSelected = L"0";
     std::wstring operationView;
-    std::wstring currentPathCached;
-    std::filesystem::path currentPath;
 
-    std::vector<std::wstring> parentFolderEntries;
-    int parentFolderSelected = 0;
-
-    std::vector<std::wstring> currentFolderEntries;
-    int currentFolderSelected = 0;
+    MainView Main;
+    ParentView Parent;
 
     float diskSpaceAvailable = 0;
-    bool isShowingHiddenFile = true;
+    bool IsShowingHiddenFile = true;
 
     FileSystemOperations filesystemOperations;
 
-    JustFastUiImpl(const JustFastOptions& options)
-        : currentPath(options.path)
-        , isShowingHiddenFile(options.showHiddenFiles)
+    JustFastUiImpl(const std::filesystem::path& path, bool showHiddenFiles)
+        : IsShowingHiddenFile(showHiddenFiles)
     {
-        int availableSpace = static_cast<int>(std::filesystem::space(currentPath).available / 1e9);
-        int capacity = static_cast<int>(std::filesystem::space(currentPath).capacity / 1e9);
+        int availableSpace
+            = static_cast<int>(std::filesystem::space(path).available / 1e9);
+        int capacity = static_cast<int>(std::filesystem::space(path).capacity / 1e9);
         diskSpaceAvailable = float(availableSpace) / float(capacity);
         spaceInfo = L"Free Space:" + std::to_wstring(availableSpace) + L" GiB " + L"(Total:" + std::to_wstring(capacity) + L"GiB)";
 
-        currentPathCached = currentPath.wstring();
+        OnChdirCallbacks.push_back([=]() {
+            updateAllUi();
+        });
 
-        updateAllUi();
+        Chdir(path);
     }
 
-    void updateParentView()
-    {
-        parentFolderEntries.clear();
-        for (const auto& p : std::filesystem::directory_iterator(currentPath.parent_path())) {
-            if (isShowingHiddenFile || p.path().filename().string()[0] != '.') {
-                parentFolderEntries.emplace_back(p.path().filename().wstring());
-            }
-            if (p.path().filename() == currentPath.filename()) {
-                parentFolderSelected = parentFolderEntries.size() - 1;
-            }
-        }
-    }
-
-    void updateMainView(size_t cursorPosition = 0)
-    {
-        currentFolderEntries.clear();
-        currentFolderSelected = cursorPosition;
-        try {
-            for (const auto& p : std::filesystem::directory_iterator(currentPath)) {
-                if (isShowingHiddenFile || p.path().filename().string()[0] != '.') {
-                    currentFolderEntries.emplace_back(p.path().filename().wstring());
-                }
-            }
-        } catch (std::filesystem::filesystem_error& error) {
-            std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-            statusMessage = converter.from_bytes(error.what());
-            changePathAndUpdateViews(currentPath.parent_path());
-        }
-    }
-
-    void updateOperationView()
+    void UpdateOperationView()
     {
         switch (filesystemOperations.getOperation()) {
         case FileSystemOperations::Operation::NOT_SELECTED:
@@ -87,48 +98,59 @@ struct JustFastUiImpl {
         }
     }
 
-    void updateSelectedCounter()
+    void UpdateSelectedCounter()
     {
         statusSelected = L"(" + std::to_wstring(filesystemOperations.countSelectedFiles()) + L") ";
     }
 
     void updateAllUi(size_t cursorPosition = 0)
     {
-        updateMainView(cursorPosition);
-        updateParentView();
-        updateOperationView();
-        updateSelectedCounter();
+        Main.Update(CurrentPath, IsShowingHiddenFile, cursorPosition);
+        Parent.Update(CurrentPath, IsShowingHiddenFile);
+        UpdateOperationView();
+        UpdateSelectedCounter();
     }
 
-    void changePathAndUpdateViews(const std::filesystem::path& newPath)
+    void Chdir(const std::filesystem::path& newPath)
     {
         if (!std::filesystem::is_directory(newPath)) {
             return;
         }
+        if (newPath == CurrentPath) {
+            return;
+        }
 
-        currentPath = newPath;
-        currentPathCached = currentPath.wstring();
-        updateMainView();
-        updateParentView();
+        std::filesystem::path backup = CurrentPath;
+        try {
+            CurrentPath = newPath;
+            CurrentPathCached = CurrentPath.wstring();
+            for (auto& callback : OnChdirCallbacks) {
+                callback();
+            }
+        } catch (std::filesystem::filesystem_error& error) {
+            std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+            statusMessage = converter.from_bytes(error.what());
+            Chdir(backup);
+        }
     }
 
     void selectFile(const std::filesystem::path& selectedFile)
     {
         filesystemOperations.appendSelectedFiles(selectedFile);
-        updateSelectedCounter();
+        UpdateSelectedCounter();
     }
 
     void toggleHiddenFiles()
     {
-        isShowingHiddenFile = !isShowingHiddenFile;
-        updateMainView();
-        updateParentView();
+        IsShowingHiddenFile = !IsShowingHiddenFile;
+        Main.Update(CurrentPath, IsShowingHiddenFile);
+        Parent.Update(CurrentPath, IsShowingHiddenFile);
     }
 
     void selectOperation(FileSystemOperations::Operation o)
     {
         filesystemOperations.setOperation(o);
-        updateOperationView();
+        UpdateOperationView();
     }
 
     void performOperation(const std::filesystem::path& dest)
@@ -139,33 +161,33 @@ struct JustFastUiImpl {
         } catch (std::filesystem::filesystem_error& error) {
             std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
             statusMessage = converter.from_bytes(error.what());
-            changePathAndUpdateViews(currentPath.parent_path());
+            Chdir(CurrentPath.parent_path());
         }
     }
 
     bool OnEvent(const ftxui::Event& event)
     {
         if (event == ftxui::Event::Character('l') || event == ftxui::Event::ArrowRight) {
-            if (currentFolderEntries.empty()) {
+            if (Main.Folder.Entries.empty()) {
                 return true;
             }
 
-            changePathAndUpdateViews(currentPath / currentFolderEntries[currentFolderSelected]);
+            Chdir(CurrentPath / Main.SelectedEntry());
             return true;
         }
 
         if (event == ftxui::Event::Character('h') || event == ftxui::Event::ArrowLeft) {
-            changePathAndUpdateViews(currentPath.parent_path());
+            Chdir(CurrentPath.parent_path());
             return true;
         }
 
         if (event == ftxui::Event::Character('f')) {
-            selectFile(currentPath / currentFolderEntries[currentFolderSelected]);
+            selectFile(CurrentPath / Main.SelectedEntry());
             return true;
         }
 
         if (event == ftxui::Event::Character(' ')) {
-            performOperation(currentPath);
+            performOperation(CurrentPath);
             return true;
         }
 
@@ -198,10 +220,10 @@ struct JustFastUiImpl {
     }
 };
 
-JustFastUi::JustFastUi(const JustFastOptions& options)
-    : m_impl(new JustFastUiImpl(options))
-    , parentFolder(ftxui::Menu(&m_impl->parentFolderEntries, &m_impl->parentFolderSelected))
-    , currentFolder(ftxui::Menu(&m_impl->currentFolderEntries, &m_impl->currentFolderSelected))
+JustFastUi::JustFastUi(const std::filesystem::path& path, bool showHiddenFiles)
+    : m_impl(new JustFastUiImpl(path, showHiddenFiles))
+    , parentFolder(ftxui::Menu(&m_impl->Parent.Folder.Entries, &m_impl->Parent.Folder.Selected))
+    , currentFolder(ftxui::Menu(&m_impl->Main.Folder.Entries, &m_impl->Main.Folder.Selected))
 {
     Add(currentFolder);
 }
@@ -214,11 +236,11 @@ void JustFastUi::setQuitFunction(std::function<void()> q)
 ftxui::Element JustFastUi::Render()
 {
     if (m_impl->filesystemOperations.lastOperationIsCompleated()) {
-        m_impl->updateAllUi(m_impl->currentFolderSelected);
+        m_impl->updateAllUi(m_impl->Main.Folder.Selected);
         m_impl->filesystemOperations.clearLastOperationStatus();
     }
 
-    auto currentPathView = ftxui::text(m_impl->currentPathCached);
+    auto currentPathView = ftxui::text(m_impl->CurrentPathCached);
 
     auto mainView = ftxui::hbox({ parentFolder->Render() | ftxui::frame,
         ftxui::separator(),
