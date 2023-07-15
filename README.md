@@ -17,7 +17,7 @@ Supported OS:
 
 -   [x] MacOs 🍎
 -   [x] Gnu/Linux 🐧
--   [x] Windows 🪟
+-   [x] Windows 🪟. Drive ?
 
 ## Fork
 

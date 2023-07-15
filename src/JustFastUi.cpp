@@ -10,7 +10,6 @@
 
 struct Folder {
     std::vector<std::wstring> Entries;
-    // std::vector<std::filesystem::path> Paths;
     int Selected = 0;
     std::unordered_map<std::string, std::string> LabelMap;
 
@@ -67,7 +66,13 @@ struct ParentView {
     void Update(const std::filesystem::path& current, bool showHiddenFile)
     {
         Folder.Clear();
-        for (const auto& p : std::filesystem::directory_iterator(current.parent_path())) {
+        auto parent = current.parent_path();
+        if (parent == current) {
+            // root
+            return;
+        }
+
+        for (const auto& p : std::filesystem::directory_iterator(parent)) {
             auto path = p.path();
             if (showHiddenFile || path.filename().string()[0] != '.') {
                 Folder.Push(path, path == current);
