@@ -3,25 +3,74 @@
 #include <codecvt>
 #include <ftxui/component/event.hpp>
 #include <ftxui/screen/string.hpp>
+#include <stdexcept>
 #include <string>
+#include <unordered_map>
 #include <utility>
 
 struct Folder {
     std::vector<std::wstring> Entries;
+    // std::vector<std::filesystem::path> Paths;
     int Selected = 0;
+    std::unordered_map<std::string, std::string> LabelMap;
+
+    void Clear()
+    {
+        Selected = 0;
+        Entries.clear();
+        LabelMap.clear();
+    }
+
+    void Push(const std::filesystem::path& path, bool isSelected)
+    {
+        if (isSelected) {
+            Selected = Entries.size();
+        }
+        Entries.emplace_back(path.filename().wstring());
+
+        // label
+        auto filename = path.filename().string();
+        std::string icon;
+        try {
+            if (std::filesystem::is_directory(path)) {
+                icon = "📁";
+            } else if (std::filesystem::is_symlink(path)) {
+                icon = "🔗";
+            } else {
+                icon = "📄";
+            }
+        } catch (const std::runtime_error&) {
+            icon = "🚫";
+        }
+        LabelMap.insert({ filename, icon + filename });
+    }
+
+    ftxui::Element Transform(const ftxui::EntryState& state) const
+    {
+        std::string label = (state.active ? "> " : "  ");
+        auto it = LabelMap.find(state.label);
+        if (it != LabelMap.end()) {
+            label += it->second;
+        } else {
+            label += "not found";
+        }
+        ftxui::Element e = ftxui::text(label);
+        if (state.active) {
+            e = e | ftxui::inverted;
+        }
+        return e;
+    }
 };
 
 struct ParentView {
     Folder Folder;
     void Update(const std::filesystem::path& current, bool showHiddenFile)
     {
-        Folder.Entries.clear();
+        Folder.Clear();
         for (const auto& p : std::filesystem::directory_iterator(current.parent_path())) {
-            if (showHiddenFile || p.path().filename().string()[0] != '.') {
-                Folder.Entries.emplace_back(p.path().filename().wstring());
-            }
-            if (p.path().filename() == current.filename()) {
-                Folder.Selected = Folder.Entries.size() - 1;
+            auto path = p.path();
+            if (showHiddenFile || path.filename().string()[0] != '.') {
+                Folder.Push(path, path == current);
             }
         }
     }
@@ -34,13 +83,13 @@ struct MainView {
         return Folder.Entries[Folder.Selected];
     }
 
-    void Update(const std::filesystem::path& path, bool showHiddenFile, size_t cursorPosition = 0)
+    void Update(const std::filesystem::path& path, bool showHiddenFile, const std::filesystem::path& old = {})
     {
-        Folder.Entries.clear();
-        Folder.Selected = cursorPosition;
+        Folder.Clear();
         for (const auto& p : std::filesystem::directory_iterator(path)) {
-            if (showHiddenFile || p.path().filename().string()[0] != '.') {
-                Folder.Entries.emplace_back(p.path().filename().wstring());
+            auto path = p.path();
+            if (showHiddenFile || path.filename().string()[0] != '.') {
+                Folder.Push(path, path == old);
             }
         }
     }
@@ -49,7 +98,7 @@ struct MainView {
 struct JustFastUiImpl {
     std::filesystem::path CurrentPath;
     std::wstring CurrentPathCached;
-    std::list<std::function<void()>> OnChdirCallbacks;
+    std::list<std::function<void(const std::filesystem::path&)>> OnChdirCallbacks;
 
     std::wstring spaceInfo;
     std::wstring statusMessage;
@@ -73,8 +122,8 @@ struct JustFastUiImpl {
         diskSpaceAvailable = float(availableSpace) / float(capacity);
         spaceInfo = L"Free Space:" + std::to_wstring(availableSpace) + L" GiB " + L"(Total:" + std::to_wstring(capacity) + L"GiB)";
 
-        OnChdirCallbacks.push_back([=]() {
-            updateAllUi();
+        OnChdirCallbacks.push_back([=](const std::filesystem::path& old) {
+            updateAllUi(old);
         });
 
         Chdir(path);
@@ -103,9 +152,9 @@ struct JustFastUiImpl {
         statusSelected = L"(" + std::to_wstring(filesystemOperations.countSelectedFiles()) + L") ";
     }
 
-    void updateAllUi(size_t cursorPosition = 0)
+    void updateAllUi(const std::filesystem::path& old = {})
     {
-        Main.Update(CurrentPath, IsShowingHiddenFile, cursorPosition);
+        Main.Update(CurrentPath, IsShowingHiddenFile, old);
         Parent.Update(CurrentPath, IsShowingHiddenFile);
         UpdateOperationView();
         UpdateSelectedCounter();
@@ -125,7 +174,7 @@ struct JustFastUiImpl {
             CurrentPath = newPath;
             CurrentPathCached = CurrentPath.wstring();
             for (auto& callback : OnChdirCallbacks) {
-                callback();
+                callback(backup);
             }
         } catch (std::filesystem::filesystem_error& error) {
             std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
@@ -223,17 +272,20 @@ struct JustFastUiImpl {
 JustFastUi::JustFastUi(const std::filesystem::path& path, bool showHiddenFiles)
     : m_impl(new JustFastUiImpl(path, showHiddenFiles))
 {
-    ftxui::MenuOption option;
-    option.entries.transform = [](const ftxui::EntryState& state) {
-        auto label = (state.active ? "> " : "  ") + state.label;
-        ftxui::Element e = ftxui::text(label);
-        if (state.active)
-            e = e | ftxui::inverted;
-        return e;
-    };
+    {
+        // parent
+        ftxui::MenuOption option;
+        option.entries.transform = std::bind(&Folder::Transform, &m_impl->Parent.Folder, std::placeholders::_1);
+        parentFolder = ftxui::Menu(&m_impl->Parent.Folder.Entries, &m_impl->Parent.Folder.Selected, option);
+    }
 
-    parentFolder = ftxui::Menu(&m_impl->Parent.Folder.Entries, &m_impl->Parent.Folder.Selected, option);
-    currentFolder = ftxui::Menu(&m_impl->Main.Folder.Entries, &m_impl->Main.Folder.Selected, option);
+    {
+        // main
+        ftxui::MenuOption option;
+        option.entries.transform = std::bind(&Folder::Transform, &m_impl->Main.Folder, std::placeholders::_1);
+        currentFolder = ftxui::Menu(&m_impl->Main.Folder.Entries, &m_impl->Main.Folder.Selected, option);
+    }
+
     Add(currentFolder);
 }
 
@@ -245,7 +297,7 @@ void JustFastUi::setQuitFunction(std::function<void()> q)
 ftxui::Element JustFastUi::Render()
 {
     if (m_impl->filesystemOperations.lastOperationIsCompleated()) {
-        m_impl->updateAllUi(m_impl->Main.Folder.Selected);
+        m_impl->updateAllUi();
         m_impl->filesystemOperations.clearLastOperationStatus();
     }
 
