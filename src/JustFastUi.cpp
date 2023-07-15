@@ -222,9 +222,18 @@ struct JustFastUiImpl {
 
 JustFastUi::JustFastUi(const std::filesystem::path& path, bool showHiddenFiles)
     : m_impl(new JustFastUiImpl(path, showHiddenFiles))
-    , parentFolder(ftxui::Menu(&m_impl->Parent.Folder.Entries, &m_impl->Parent.Folder.Selected))
-    , currentFolder(ftxui::Menu(&m_impl->Main.Folder.Entries, &m_impl->Main.Folder.Selected))
 {
+    ftxui::MenuOption option;
+    option.entries.transform = [](const ftxui::EntryState& state) {
+        auto label = (state.active ? "> " : "  ") + state.label;
+        ftxui::Element e = ftxui::text(label);
+        if (state.active)
+            e = e | ftxui::inverted;
+        return e;
+    };
+
+    parentFolder = ftxui::Menu(&m_impl->Parent.Folder.Entries, &m_impl->Parent.Folder.Selected, option);
+    currentFolder = ftxui::Menu(&m_impl->Main.Folder.Entries, &m_impl->Main.Folder.Selected, option);
     Add(currentFolder);
 }
 
